@@ -1,10 +1,11 @@
-"use client";
-import React, { useState, useEffect } from "react";
+"use client"
+import React, { useState, useEffect, useCallback } from "react";
 import { quizData } from "@/lib/quizData";
 import { useRouter } from "next/navigation";
 
+
 type QuizQuestion = {
-  postId: string;
+  postId: number;
   title: string;
   content: string;
   options: string[];
@@ -25,7 +26,13 @@ export default function Quiz() {
   useEffect(() => {
     const storedState = localStorage.getItem("quizState");
     if (storedState) {
-      const { index, time, savedAnswers, pool, started } = JSON.parse(storedState);
+      const { index, time, savedAnswers, pool, started } = JSON.parse(storedState) as {
+        index: number;
+        time: number;
+        savedAnswers: { questionId: number; answer: string; timeSpent: number }[];
+        pool: QuizQuestion[];
+        started: boolean;
+      };
       setCurrentQuestionIndex(index);
       setTimer(time);
       setAnswers(savedAnswers);
@@ -36,6 +43,59 @@ export default function Quiz() {
       initializeQuiz();
     }
   }, []);
+
+  const handleAnswerClick = (answer: string) => {
+    if (!canAnswer) return;
+  
+    const updatedAnswers = answers.map((item) =>
+      item.questionId === questionPool[currentQuestionIndex]?.postId
+        ? { ...item, answer, timeSpent: 30 - timer }
+        : item
+    );
+  
+    if (!updatedAnswers.find((item) => item.questionId === questionPool[currentQuestionIndex]?.postId )) {
+      updatedAnswers.push({
+        questionId: Number(questionPool[currentQuestionIndex]?.postId),
+        answer,
+        timeSpent: 30 - timer,
+      });
+    }
+  
+    setAnswers(updatedAnswers);
+    localStorage.setItem("quizState", JSON.stringify({ index: currentQuestionIndex, time: timer, savedAnswers: updatedAnswers, pool: questionPool, started: hasStarted }));
+    setSelectedAnswer(answer);
+  };
+  
+  const handleNextQuestion = useCallback(() => {
+    const updatedAnswers = answers.map((item) =>
+      item.questionId === questionPool[currentQuestionIndex]?.postId
+        ? { ...item, answer: selectedAnswer ?? '', timeSpent: 30 - timer }
+        : item
+    );
+  
+    if (!updatedAnswers.find((item) => item.questionId === questionPool[currentQuestionIndex]?.postId)) {
+      updatedAnswers.push({
+        questionId: Number(questionPool[currentQuestionIndex]?.postId),
+        answer: selectedAnswer ?? '',
+        timeSpent: 30 - timer,
+      });
+    }
+  
+    setAnswers(updatedAnswers);
+    localStorage.setItem("quizState", JSON.stringify({ index: currentQuestionIndex, time: timer, savedAnswers: updatedAnswers, pool: questionPool, started: hasStarted }));
+  
+    const nextIndex = currentQuestionIndex + 1;
+    if (nextIndex < questionPool.length) {
+      setCurrentQuestionIndex(nextIndex);
+      setTimer(30);
+      setCanAnswer(false);
+      setSelectedAnswer(null);
+      localStorage.setItem("quizState", JSON.stringify({ index: nextIndex, time: 30, savedAnswers: updatedAnswers, pool: questionPool, started: hasStarted }));
+    } else {
+      router.push("/results");
+    }
+  }, [answers, currentQuestionIndex, hasStarted, questionPool, router, selectedAnswer, timer]);
+
 
   useEffect(() => {
     if (timer > 0) {
@@ -58,73 +118,23 @@ export default function Quiz() {
     } else {
       handleNextQuestion();
     }
-  }, [timer, currentQuestionIndex, answers, questionPool, hasStarted]);
+  }, [timer, currentQuestionIndex, answers, questionPool, hasStarted, handleNextQuestion]);
 
   const initializeQuiz = () => {
-    const shuffledQuestions = [...quizData].sort(() => 0.5 - Math.random()).slice(0, 10);
+    const shuffledQuestions = [...quizData]
+      .map((data) => ({
+        ...data,
+        postId: data.postId  
+      }))
+      .sort(() => 0.5 - Math.random())
+      .slice(0, 10);
+      
     setQuestionPool(shuffledQuestions);
     setHasStarted(true);
     localStorage.setItem("quizState", JSON.stringify({ index: 0, time: 30, savedAnswers: [], pool: shuffledQuestions, started: true }));
   };
 
-  const handleAnswerClick = (answer: string) => {
-    if (!canAnswer) return;
   
-    // Sorunun postId'sine göre cevap güncelle veya ekle
-    const updatedAnswers = answers.map((item) =>
-      item.questionId === questionPool[currentQuestionIndex]?.postId
-        ? { ...item, answer, timeSpent: 30 - timer }
-        : item
-    );
-  
-    // Eğer cevap bulunamadıysa yeni cevap ekle
-    if (!updatedAnswers.find((item) => item.questionId === questionPool[currentQuestionIndex]?.postId)) {
-      updatedAnswers.push({
-        questionId: questionPool[currentQuestionIndex]?.postId,
-        answer,
-        timeSpent: 30 - timer,
-      });
-    }
-  
-    setAnswers(updatedAnswers);
-    localStorage.setItem("quizState", JSON.stringify({ index: currentQuestionIndex, time: timer, savedAnswers: updatedAnswers, pool: questionPool, started: hasStarted }));
-    setSelectedAnswer(answer);
-  };
-  
-  const handleNextQuestion = () => {
-    // Mevcut cevabı güncelle
-    const updatedAnswers = answers.map((item) =>
-      item.questionId === questionPool[currentQuestionIndex]?.postId
-        ? { ...item, answer: selectedAnswer ?? '', timeSpent: 30 - timer }
-        : item
-    );
-  
-    // Eğer cevap bulunamadıysa yeni cevap ekle
-    if (!updatedAnswers.find((item) => item.questionId === questionPool[currentQuestionIndex]?.postId)) {
-      updatedAnswers.push({
-        questionId: questionPool[currentQuestionIndex]?.postId,
-        answer: selectedAnswer ?? '',
-        timeSpent: 30 - timer,
-      });
-    }
-  
-    setAnswers(updatedAnswers);
-    localStorage.setItem("quizState", JSON.stringify({ index: currentQuestionIndex, time: timer, savedAnswers: updatedAnswers, pool: questionPool, started: hasStarted }));
-  
-    // Bir sonraki soruya geçiş
-    const nextIndex = currentQuestionIndex + 1;
-    if (nextIndex < questionPool.length) {
-      setCurrentQuestionIndex(nextIndex);
-      setTimer(30);
-      setCanAnswer(false);
-      setSelectedAnswer(null);
-      localStorage.setItem("quizState", JSON.stringify({ index: nextIndex, time: 30, savedAnswers: updatedAnswers, pool: questionPool, started: hasStarted }));
-    } else {
-      router.push("/results");
-    }
-  };
-  
-
   const generateChoices = (question: QuizQuestion) => {
     return question.options.map((option, idx) => ({
       label: String.fromCharCode(65 + idx), // A, B, C, D
