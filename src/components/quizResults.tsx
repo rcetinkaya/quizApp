@@ -5,6 +5,7 @@ import { quizData } from "@/lib/quizData";
 interface SavedAnswer {
   questionId: number;
   selectedChoice: string;
+  timeSpent:string
 }
 
 export default function Results() {
@@ -17,7 +18,8 @@ export default function Results() {
       const { savedAnswers } = JSON.parse(storedState);
       setAnswers(savedAnswers.map((answer: any) => ({
         questionId: answer.questionId,
-        selectedChoice: answer.answer
+        selectedChoice: answer.answer,
+        timeSpent:answer.timeSpent
       })));
     }
   }, []);
@@ -53,7 +55,7 @@ export default function Results() {
   if (answers.length < 1) {
     return <div className="w-full min-h-screen flex items-center justify-center bg-gray-300 text-red-700 font-bold">Sonuç Bulunamadı...</div>;
   }
-
+  
   return (
     <div className="p-6 max-w-full mx-auto px-[5%] bg-gray-300 rounded-xl shadow-lg">
       <h1 className="text-3xl font-semibold mb-6 text-center text-gray-800">Sonuçlar</h1>
@@ -74,6 +76,7 @@ export default function Results() {
             <th className="p-3 text-left">Verilen Cevap</th>
             <th className="p-3 text-left">Doğru Cevap(lar)</th>
             <th className="p-3 text-left">Sonuç</th>
+            <th className="p-3 text-left">Geçirilen Süre</th>
           </tr>
         </thead>
         <tbody>
@@ -104,6 +107,7 @@ export default function Results() {
                 <td className={`p-3 font-bold ${isCorrect ? "text-green-600" : "text-red-600"}`}>
                   {isCorrect ? "Doğru" : "Yanlış"}
                 </td>
+                <td className="p-3 text-center">{answer.timeSpent}s</td>
               </tr>
             );
           })}
