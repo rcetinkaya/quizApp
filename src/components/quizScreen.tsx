@@ -150,7 +150,7 @@ export default function Quiz() {
 
   return (
     <div className="p-6 max-w-md min-w-[300px] min-h-[400px] mx-auto bg-white rounded-xl shadow-md">
-      <h1 className="text-2xl mb-4">{currentQuestionIndex+1 + "-) "}{currentQuestion.title}</h1>
+      <h1 className="text-2xl mb-4 select-none">{currentQuestionIndex+1 + "-) "}{currentQuestion.title}</h1>
       <div className="space-y-4">
         {generateChoices(currentQuestion).map((choice) => (
           <button
