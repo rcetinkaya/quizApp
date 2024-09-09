@@ -1,25 +1,27 @@
 "use client"
 import { JSXElementConstructor, Key, ReactElement, ReactNode, ReactPortal, useEffect, useState } from "react";
 import { quizData } from "@/lib/quizData";
+import { useRouter } from "next/navigation";
 
 interface SavedAnswer {
   questionId: number;
   selectedChoice: string;
-  timeSpent:string
+  timeSpent: string
 }
 
 export default function Results() {
+  const router = useRouter();
   const [answers, setAnswers] = useState<SavedAnswer[]>([]);
   const [questions, setQuestions] = useState<any[]>([]);
 
   useEffect(() => {
-    const storedState = localStorage.getItem("quizState");
+    const storedState = sessionStorage.getItem("quizState");
     if (storedState) {
       const { savedAnswers } = JSON.parse(storedState);
       setAnswers(savedAnswers.map((answer: any) => ({
         questionId: answer.questionId,
         selectedChoice: answer.answer,
-        timeSpent:answer.timeSpent
+        timeSpent: answer.timeSpent
       })));
     }
   }, []);
@@ -47,15 +49,23 @@ export default function Results() {
   };
 
   const handleClearResults = () => {
-    localStorage.removeItem("quizState");
+    sessionStorage.removeItem("quizState");
     setAnswers([]);
     alert("Sonuçlar başarıyla silindi.");
   };
 
   if (answers.length < 1) {
-    return <div className="w-full min-h-screen flex items-center justify-center bg-gray-300 text-red-700 font-bold">Sonuç Bulunamadı...</div>;
+    return <div className="w-full min-h-screen flex flex-col gap-y-2 items-center justify-center bg-gray-300 text-red-700 font-bold">
+      <div>Sonuç Bulunamadı...</div>
+      <button
+        onClick={() => router.push("/")}
+        className="py-2 px-4 bg-red-600 text-white rounded"
+      >
+        Home
+      </button>
+    </div>;
   }
-  
+
   return (
     <div className="p-6 max-w-full mx-auto px-[5%] bg-gray-300 rounded-xl shadow-lg">
       <h1 className="text-3xl font-semibold mb-6 text-center text-gray-800">Sonuçlar</h1>
@@ -88,7 +98,7 @@ export default function Results() {
 
             return (
               <tr key={index} className="border-b border-gray-300">
-                <td className="p-3 min-w-[100px]">{`Soru ${index+1}`}</td>
+                <td className="p-3 min-w-[100px]">{`Soru ${index + 1}`}</td>
                 <td className="p-3 flex flex-col gap-y-4">
                   <div>A: {choices.A}</div>
                   <div>B: {choices.B}</div>

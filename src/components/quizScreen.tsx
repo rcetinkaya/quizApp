@@ -24,7 +24,7 @@ export default function Quiz() {
   const [hasStarted, setHasStarted] = useState<boolean>(false);
 
   useEffect(() => {
-    const storedState = localStorage.getItem("quizState");
+    const storedState = sessionStorage.getItem("quizState");
     if (storedState) {
       const { index, time, savedAnswers, pool, started } = JSON.parse(storedState) as {
         index: number;
@@ -62,7 +62,7 @@ export default function Quiz() {
     }
   
     setAnswers(updatedAnswers);
-    localStorage.setItem("quizState", JSON.stringify({ index: currentQuestionIndex, time: timer, savedAnswers: updatedAnswers, pool: questionPool, started: hasStarted }));
+    sessionStorage.setItem("quizState", JSON.stringify({ index: currentQuestionIndex, time: timer, savedAnswers: updatedAnswers, pool: questionPool, started: hasStarted }));
     setSelectedAnswer(answer);
   };
   
@@ -82,15 +82,15 @@ export default function Quiz() {
     }
   
     setAnswers(updatedAnswers);
-    localStorage.setItem("quizState", JSON.stringify({ index: currentQuestionIndex, time: timer, savedAnswers: updatedAnswers, pool: questionPool, started: hasStarted }));
+    sessionStorage.setItem("quizState", JSON.stringify({ index: currentQuestionIndex, time: timer, savedAnswers: updatedAnswers, pool: questionPool, started: hasStarted }));
   
     const nextIndex = currentQuestionIndex + 1;
-    if (nextIndex < questionPool.length) {
+    if (nextIndex < questionPool.length ) {
       setCurrentQuestionIndex(nextIndex);
       setTimer(30);
       setCanAnswer(false);
       setSelectedAnswer(null);
-      localStorage.setItem("quizState", JSON.stringify({ index: nextIndex, time: 30, savedAnswers: updatedAnswers, pool: questionPool, started: hasStarted }));
+      sessionStorage.setItem("quizState", JSON.stringify({ index: nextIndex, time: 30, savedAnswers: updatedAnswers, pool: questionPool, started: hasStarted }));
     } else {
       router.push("/results");
     }
@@ -102,7 +102,7 @@ export default function Quiz() {
       const intervalId = setInterval(() => {
         setTimer((prev) => {
           const newTime = prev - 1;
-          localStorage.setItem(
+          sessionStorage.setItem(
             "quizState",
             JSON.stringify({ index: currentQuestionIndex, time: newTime, savedAnswers: answers, pool: questionPool, started: hasStarted })
           );
@@ -131,7 +131,7 @@ export default function Quiz() {
       
     setQuestionPool(shuffledQuestions);
     setHasStarted(true);
-    localStorage.setItem("quizState", JSON.stringify({ index: 0, time: 30, savedAnswers: [], pool: shuffledQuestions, started: true }));
+    sessionStorage.setItem("quizState", JSON.stringify({ index: 0, time: 30, savedAnswers: [], pool: shuffledQuestions, started: true }));
   };
 
   
